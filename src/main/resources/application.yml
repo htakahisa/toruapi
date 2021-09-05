@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: toruapi
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/toruapi
+    username: toru
+    password: maru
+    driver-class-name: com.mysql.jdbc.Driver
+
+server:
+  port: 20001
