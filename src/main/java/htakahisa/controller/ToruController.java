@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ToruController {
 
+
     @Autowired
     private ToruService toruService;
 
@@ -23,4 +24,12 @@ public class ToruController {
 
         return res;
     }
+    @PostMapping(value="/createRoom")
+    public  CreateRoomRes createRoom(@RequestBody CreateRoomReq rep) {
+
+
+        return new CreateRoomRes();
+
+    }
 }
+
