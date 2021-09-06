@@ -1,5 +1,7 @@
 package htakahisa.controller;
 
+import htakahisa.controller.dto.CreateRoomReq;
+import htakahisa.controller.dto.CreateRoomRes;
 import htakahisa.controller.dto.GetInfoReq;
 import htakahisa.controller.dto.GetInfoRes;
 import htakahisa.service.ToruService;
@@ -25,10 +27,8 @@ public class ToruController {
         return res;
     }
     @PostMapping(value="/createRoom")
-    public  CreateRoomRes createRoom(@RequestBody CreateRoomReq rep) {
-
-
-        return new CreateRoomRes();
+    public CreateRoomRes createRoom(@RequestBody CreateRoomReq req) {
+        return toruService.createRoom(req);
 
     }
 }
