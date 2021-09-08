@@ -37,7 +37,9 @@ public class BattleResultRes {
     @Setter
     public static class ResultAction {
 
-        private String message;
+        private String message1;
+
+        private String message2;
 
         private ClientAction action;
 

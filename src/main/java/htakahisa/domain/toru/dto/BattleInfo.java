@@ -7,6 +7,9 @@ import htakahisa.domain.toru.entity.WazaEntity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.util.Random;
+
 @Getter
 @Setter
 public class BattleInfo {
@@ -28,6 +31,13 @@ public class BattleInfo {
             hp = 0L;
         }
         return hp;
+    }
+
+    public boolean isHit() {
+        BigDecimal hitRate = getWaza().getHitRate().add(getMe().getDodgeRate());
+        int i = new Random().nextInt(100) + 1;
+
+        return hitRate.multiply(new BigDecimal("100")).intValue() < i;
     }
 
 

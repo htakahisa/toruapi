@@ -5,16 +5,10 @@ import lombok.Setter;
 
 public enum Waza {
 
-    PUNCH(1), // パンチ
-    CHANGE(900), // 交代
-    GIVE_UP(901), // 降参
+    PUNCH, // パンチ
+    KICK, // キック
+    CHANGE, // 交代
+    GIVE_UP, // 降参
     ;
 
-    @Getter
-    @Setter
-    private int id;
-
-    Waza(int id) {
-        this.id = id;
-    }
 }

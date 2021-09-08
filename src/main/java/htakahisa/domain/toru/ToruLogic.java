@@ -22,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class ToruLogic {
@@ -105,9 +106,7 @@ public class ToruLogic {
         room.setWaza(req.getUserId(), req.getWaza());
         roomRepository.save(room);
 
-        boolean commandReady = room.commandReady();
-
-
+        boolean commandReady = room.commandReady() && battleResult.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.COMMAND_WAITING;
         return commandReady;
     }
 
@@ -135,7 +134,17 @@ public class ToruLogic {
         BattleInfo b2 = BattleInfo.of(char2, characterStatus2, characterStatus1, room, waza2, room.getUserId2());
 
         // 順番を決める
-        List<BattleInfo> battleInfos = List.of(b1, b2);
+        List<BattleInfo> battleInfos = List.of(b1, b2).stream()
+                .sorted((c1, c2) -> {
+                    if (c1.getWaza().getPriority().compareTo(c2.getWaza().getPriority()) > 0) {
+                        return 1;
+                    } else if (c1.getWaza().getPriority().compareTo(c2.getWaza().getPriority()) < 0) {
+                        return -1;
+                    } else {
+                        return c1.getCharacter().getSpeed().compareTo(c2.getCharacter().getSpeed());
+                    }
+                })
+                .collect(Collectors.toList());
 
         // バトル
         BattleResultRes battleResultRes = new BattleResultRes();
@@ -152,7 +161,7 @@ public class ToruLogic {
                     if (SpecialAbility.TORU == battleInfo.getCharacter().getSpecialAbility()) {
                         BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                         resultAction.setAction(ClientAction.EFFECT);
-                        resultAction.setMessage("とうやまは登場した瞬間に宇宙人からのスーパービームを受け、攻撃力がぐーんとあがった。");
+                        resultAction.setMessage1("とうやまは登場した瞬間に宇宙人からのスーパービームを受け、攻撃力がぐーんとあがった。");
                         battleInfo.getMe().setAttackRate(new BigDecimal("1.5"));
                         result.setInTheBattle(resultAction);
                     }
@@ -176,20 +185,33 @@ public class ToruLogic {
                 if (InAction.IN_ATTACK == battleInfo.getWaza().getInAction()) {
                     if (ClientAction.ATTACK == battleInfo.getWaza().getClientAction()) {
                         BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                        resultAction.setMessage(battleInfo.getMe().getName() + " の " + battleInfo.getWaza().getName() + "!");
-                        resultAction.setAction(ClientAction.ATTACK);
+                        resultAction.setMessage1(battleInfo.getMe().getName() + " の " + battleInfo.getWaza().getName() + "!");
 
-                        Long opHp = battleInfo.attack();
-                        battleInfo.getOp().setHp(opHp);
+                        if (battleInfo.isHit()) {
+                            resultAction.setAction(ClientAction.ATTACK);
 
-                        CharacterStatusEntity copyMe = CharacterStatusEntity.of(battleInfo.getMe());
-                        CharacterStatusEntity copyOp = CharacterStatusEntity.of(battleInfo.getOp());
+                            Long opHp = battleInfo.attack();
+                            battleInfo.getOp().setHp(opHp);
 
-                        resultAction.setCharacterStatus1(copyMe);
-                        resultAction.setCharacterStatus2(copyOp);
+                            CharacterStatusEntity copyMe = CharacterStatusEntity.of(battleInfo.getMe());
+                            CharacterStatusEntity copyOp = CharacterStatusEntity.of(battleInfo.getOp());
+
+                            resultAction.setCharacterStatus1(copyMe);
+                            resultAction.setCharacterStatus2(copyOp);
+
+                        } else {
+                            // 当たらなかった
+                            resultAction.setAction(ClientAction.NOT_HIT);
+                            resultAction.setMessage2(battleInfo.getOp().getName() + " には当たらなかった。");
+                        }
 
                         result.setInAttack(resultAction);
                         battleResultRes.getResults().add(result);
+
+                    } else if (ClientAction.EFFECT == battleInfo.getWaza().getClientAction()) {
+
+                    } else if (ClientAction.HEALING == battleInfo.getWaza().getClientAction()) {
+
                     }
                 }
 
@@ -206,8 +228,20 @@ public class ToruLogic {
                 BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
                 if (InAction.END_THE_BATTLE == battleInfo.getWaza().getInAction()) {
 
-//                    battleResultRes.getResults().add(result);
+
                 }
+
+                if (SpecialAbility.TORU == battleInfo.getCharacter().getSpecialAbility() &&
+                        battleInfo.getOp().getHp() <= 0) {
+
+                    BattleResultRes.ResultAction action = new BattleResultRes.ResultAction();
+                    action.setMessage1(battleInfo.getCharacter().getName() + " は敵を倒してテンションが上っている!");
+                    battleInfo.getMe().setSpeedRate( battleInfo.getMe().getSpeedRate().add(new BigDecimal("0.2")));
+                    action.setMessage2(battleInfo.getCharacter().getName() + " のすばやさが上がった!");
+
+                    result.setEndTheBattle(action);
+                }
+                battleResultRes.getResults().add(result);
             }
 
         }

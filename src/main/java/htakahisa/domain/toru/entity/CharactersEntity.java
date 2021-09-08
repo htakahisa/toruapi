@@ -5,10 +5,8 @@ import htakahisa.domain.toru.enums.Waza;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.math.BigDecimal;
 
 @Entity(name = "characters")
 @Getter
@@ -29,7 +27,8 @@ public class CharactersEntity {
     private Long speed;
 
     // 回避率
-    private Long dodgeRate;
+    @Column(nullable= false, precision=20, scale=2)
+    private BigDecimal dodgeRate;
 
     @Enumerated(EnumType.STRING)
     private Waza waza1;

@@ -46,12 +46,13 @@ public class ToruService {
     public BattleRes battle(BattleReq req) {
 
         toruLogic.setUserId(req.getRoomId(), req.getUserId());
-        toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.BATTLE);
+
         // roomId とユーザーのチェック
         if(!toruLogic.setReadyBattle(req)) {
             return new BattleRes();
         }
 
+        toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.BATTLE);
         // コマンド実行
         BattleRes res = toruLogic.battle(req);
 

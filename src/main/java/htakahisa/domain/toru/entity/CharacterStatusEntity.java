@@ -3,6 +3,7 @@ package htakahisa.domain.toru.entity;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -36,7 +37,8 @@ public class CharacterStatusEntity {
     private Long speed;
 
     // 回避率
-    private Long dodgeRate;
+    @Column(nullable= false, precision=20, scale=2)
+    private BigDecimal dodgeRate;
 
 
     private BigDecimal attackRate = BigDecimal.ONE;

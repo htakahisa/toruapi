@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import java.math.BigDecimal;
 
 @Entity(name = "waza")
 @Getter
@@ -37,6 +38,8 @@ public class WazaEntity {
     // 追加効果
     @Enumerated(EnumType.STRING)
     private AppendEffect appendEffect;
+
+    private BigDecimal hitRate;
 
     // いつ発動する技か
     @Enumerated(EnumType.STRING)
