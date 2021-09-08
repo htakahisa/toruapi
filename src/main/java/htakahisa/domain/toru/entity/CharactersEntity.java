@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
 @Entity(name = "characters")
@@ -29,11 +31,15 @@ public class CharactersEntity {
     // 回避率
     private Long dodgeRate;
 
+    @Enumerated(EnumType.STRING)
     private Waza waza1;
+    @Enumerated(EnumType.STRING)
     private Waza waza2;
+    @Enumerated(EnumType.STRING)
     private Waza waza3;
+    @Enumerated(EnumType.STRING)
     private Waza waza4;
-
+    @Enumerated(EnumType.STRING)
     private SpecialAbility specialAbility;
 }
 

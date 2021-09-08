@@ -3,11 +3,14 @@ package htakahisa.domain.toru;
 import htakahisa.controller.dto.*;
 import htakahisa.domain.toru.dto.BattleInfo;
 import htakahisa.domain.toru.dto.BattleResult;
-import htakahisa.domain.toru.entity.*;
+import htakahisa.domain.toru.entity.CharacterStatusEntity;
+import htakahisa.domain.toru.entity.CharactersEntity;
+import htakahisa.domain.toru.entity.RoomEntity;
+import htakahisa.domain.toru.entity.WazaEntity;
 import htakahisa.domain.toru.enums.BattleResultStatus;
 import htakahisa.domain.toru.enums.ClientAction;
+import htakahisa.domain.toru.enums.InAction;
 import htakahisa.domain.toru.enums.SpecialAbility;
-import htakahisa.domain.toru.enums.Waza;
 import htakahisa.domain.toru.repository.CharacterStatusRepository;
 import htakahisa.domain.toru.repository.CharactersRepository;
 import htakahisa.domain.toru.repository.RoomRepository;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,6 +84,17 @@ public class ToruLogic {
         battleResult.setUserId(roomId, userId);
     }
 
+    public void setCharacterStatus(String roomId, String userId, Long characterId) {
+        CharacterStatusEntity characterStatus =
+                characterStatusRepository.findByRoomIdAndUserIdAndCharacterId(roomId, userId, characterId);
+
+        if (characterStatus == null) {
+            CharactersEntity character = characterRepository.findById(characterId).get();
+            characterStatus = CharacterStatusEntity.of(roomId, userId, character);
+            characterStatusRepository.save(characterStatus);
+        }
+    }
+
     public CharactersEntity getCharacter(GetCharacterReq req) {
         return characterRepository.findById(req.getCharacterId()).get();
     }
@@ -103,15 +118,21 @@ public class ToruLogic {
         CharactersEntity char1 = characterRepository.findById(room.getCharacterId1()).get();
         CharactersEntity char2 = characterRepository.findById(room.getCharacterId2()).get();
 
-        CharacterStatusEntity charStatus1 = characterStatusRepository.findById(room.getCharacterId1()).get();
-        CharacterStatusEntity charStatus2 = characterStatusRepository.findById(room.getCharacterId2()).get();
-
         WazaEntity waza1 = wazaRepository.findById(room.getWazaUser1()).get();
         WazaEntity waza2 = wazaRepository.findById(room.getWazaUser2()).get();
 
-        BattleInfo b1 = BattleInfo.of(char1, charStatus1, room, waza1);
-        BattleInfo b2 = BattleInfo.of(char2, charStatus2, room, waza2);
+        CharacterStatusEntity characterStatus1 =
+                characterStatusRepository.findByRoomIdAndUserIdAndCharacterId(
+                        room.getRoomId(),
+                        room.getUserId1(),
+                        room.getCharacterId1());
+        CharacterStatusEntity characterStatus2 = characterStatusRepository.findByRoomIdAndUserIdAndCharacterId(
+                room.getRoomId(),
+                room.getUserId2(),
+                room.getCharacterId2());
 
+        BattleInfo b1 = BattleInfo.of(char1, characterStatus1, characterStatus2, room, waza1, room.getUserId1());
+        BattleInfo b2 = BattleInfo.of(char2, characterStatus2, characterStatus1, room, waza2, room.getUserId2());
 
         // 順番を決める
         List<BattleInfo> battleInfos = List.of(b1, b2);
@@ -119,36 +140,56 @@ public class ToruLogic {
         // バトル
         BattleResultRes battleResultRes = new BattleResultRes();
         {
-            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+
             for (BattleInfo battleInfo : battleInfos) {
+                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
                 // 最初に場に出た時
-                if (battleInfo.getCharacterStatus().getTurnCount() == 0) {
+                if (battleInfo.getMe().getTurnCount() == 0) {
                     if (InAction.IN_THE_BATTLE == battleInfo.getWaza().getInAction()) {
 
                     }
 
                     if (SpecialAbility.TORU == battleInfo.getCharacter().getSpecialAbility()) {
-
+                        BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                        resultAction.setAction(ClientAction.EFFECT);
+                        resultAction.setMessage("とうやまは登場した瞬間に宇宙人からのスーパービームを受け、攻撃力がぐーんとあがった。");
+                        battleInfo.getMe().setAttackRate(new BigDecimal("1.5"));
+                        result.setInTheBattle(resultAction);
                     }
                 }
+                battleInfo.getMe().setTurnCount(battleInfo.getMe().getTurnCount() + 1);
+
+                battleResultRes.getResults().add(result);
             }
+
         }
 
         {
-            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+
             for (BattleInfo battleInfo : battleInfos) {
+                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
                 //
                 if (InAction.BEFORE_ATTACK == battleInfo.getWaza().getInAction()) {
 
                 }
 
                 if (InAction.IN_ATTACK == battleInfo.getWaza().getInAction()) {
-                    if (Waza.PUNCH == battleInfo.getWaza().getWaza()) {
+                    if (ClientAction.ATTACK == battleInfo.getWaza().getClientAction()) {
                         BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                        resultAction.setMessage("とるのぱんち");
+                        resultAction.setMessage(battleInfo.getMe().getName() + " の " + battleInfo.getWaza().getName() + "!");
                         resultAction.setAction(ClientAction.ATTACK);
 
+                        Long opHp = battleInfo.attack();
+                        battleInfo.getOp().setHp(opHp);
+
+                        CharacterStatusEntity copyMe = CharacterStatusEntity.of(battleInfo.getMe());
+                        CharacterStatusEntity copyOp = CharacterStatusEntity.of(battleInfo.getOp());
+
+                        resultAction.setCharacterStatus1(copyMe);
+                        resultAction.setCharacterStatus2(copyOp);
+
                         result.setInAttack(resultAction);
+                        battleResultRes.getResults().add(result);
                     }
                 }
 
@@ -156,20 +197,26 @@ public class ToruLogic {
 
                 }
             }
-            battleResultRes.getResults().add(result);
+
         }
 
+        {
 
-        for (BattleInfo battleInfo : battleInfos) {
-            if (InAction.END_THE_BATTLE == battleInfo.getWaza().getInAction()) {
+            for (BattleInfo battleInfo : battleInfos) {
+                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+                if (InAction.END_THE_BATTLE == battleInfo.getWaza().getInAction()) {
 
+//                    battleResultRes.getResults().add(result);
+                }
             }
+
         }
+
 
         roomRepository.save(room);
-
         battleResult.setStatus(room.getRoomId(), BattleResultStatus.FINISHED);
         battleResult.putBattleResult(room.getRoomId(), battleResultRes);
+
 
         BattleRes res = new BattleRes();
         res.setReady(true);

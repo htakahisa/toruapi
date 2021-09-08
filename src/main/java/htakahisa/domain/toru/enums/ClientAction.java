@@ -4,5 +4,7 @@ public enum ClientAction {
 
     NONE,
     ATTACK,
+    HEALING,
+    EFFECT,
     ;
 }

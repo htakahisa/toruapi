@@ -5,4 +5,6 @@ import htakahisa.domain.toru.entity.CharactersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CharacterStatusRepository extends JpaRepository<CharacterStatusEntity, Long> {
+
+    CharacterStatusEntity findByRoomIdAndUserIdAndCharacterId(String roomId, String userId, Long characterId);
 }

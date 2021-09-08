@@ -8,6 +8,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.apache.tomcat.util.buf.StringUtils;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
 @Entity(name = "room")
@@ -26,9 +28,11 @@ public class RoomEntity {
 
     private Long characterId2;
 
+    @Enumerated(EnumType.STRING)
     private Waza wazaUser1;
+    @Enumerated(EnumType.STRING)
     private Waza wazaUser2;
-
+    @Enumerated(EnumType.STRING)
     private EnvType envType;
 
     private Long user1Char1;

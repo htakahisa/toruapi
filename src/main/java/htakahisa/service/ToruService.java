@@ -22,13 +22,10 @@ public class ToruService {
     public CreateRoomRes createRoom(CreateRoomReq req) {
 
         RoomEntity room = toruLogic.saveRoom(req);
-        if (room.ready()) {
-            toruLogic.setBattleResultStatus(room.getRoomId(), BattleResultStatus.BATTLE);
 
-        } else {
-            toruLogic.setBattleResultStatus(room.getRoomId(), BattleResultStatus.COMMAND_WAITING);
-        }
+        toruLogic.setBattleResultStatus(room.getRoomId(), BattleResultStatus.COMMAND_WAITING);
         toruLogic.setUserId(room.getRoomId(), req.getUserId());
+        toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId1());
 
         CreateRoomRes res = new CreateRoomRes();
         res.setRoomId(room.getRoomId());
@@ -49,7 +46,7 @@ public class ToruService {
     public BattleRes battle(BattleReq req) {
 
         toruLogic.setUserId(req.getRoomId(), req.getUserId());
-
+        toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.BATTLE);
         // roomId とユーザーのチェック
         if(!toruLogic.setReadyBattle(req)) {
             return new BattleRes();

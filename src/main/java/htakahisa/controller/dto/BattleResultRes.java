@@ -17,9 +17,6 @@ public class BattleResultRes {
 
     private List<BattleResult> results = new ArrayList<>();
 
-    private CharacterStatusEntity me;
-    private CharacterStatusEntity op;
-
     @Getter
     @Setter
     public static class BattleResult {
@@ -43,6 +40,11 @@ public class BattleResultRes {
         private String message;
 
         private ClientAction action;
+
+        private CharacterStatusEntity characterStatus1;
+
+        private CharacterStatusEntity characterStatus2;
+
     }
 
 }

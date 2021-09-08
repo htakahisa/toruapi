@@ -1,4 +1,4 @@
-package htakahisa.domain.toru.entity;
+package htakahisa.domain.toru.enums;
 
 public enum InAction {
 
