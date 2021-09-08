@@ -6,16 +6,13 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-@Entity
+@Entity(name = "character_status")
 @Getter
 @Setter
-public class CharactorEntity {
+public class CharacterStatusEntity {
 
     @Id
     private Long id;
 
-    private String name;
-
-
+    private long turnCount;
 }
-

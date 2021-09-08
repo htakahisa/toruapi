@@ -1,9 +1,6 @@
 package htakahisa.controller;
 
-import htakahisa.controller.dto.CreateRoomReq;
-import htakahisa.controller.dto.CreateRoomRes;
-import htakahisa.controller.dto.GetInfoReq;
-import htakahisa.controller.dto.GetInfoRes;
+import htakahisa.controller.dto.*;
 import htakahisa.service.ToruService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,10 +23,28 @@ public class ToruController {
 
         return res;
     }
+
     @PostMapping(value="/createRoom")
     public CreateRoomRes createRoom(@RequestBody CreateRoomReq req) {
         return toruService.createRoom(req);
 
     }
+
+
+    @PostMapping(value="/getCharacter")
+    public GetCharacterRes getCharacter(@RequestBody GetCharacterReq req) {
+        return toruService.getCharacter(req);
+    }
+
+    @PostMapping(value="/battle")
+    public BattleRes battle(@RequestBody BattleReq req) {
+        return toruService.battle(req);
+    }
+
+    @PostMapping(value="/getResult")
+    public BattleResultRes getResult(@RequestBody BattleResultReq req) {
+        return toruService.getResult(req);
+    }
+
 }
 
