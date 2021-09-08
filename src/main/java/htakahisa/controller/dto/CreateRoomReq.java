@@ -8,4 +8,8 @@ import lombok.Setter;
 public class CreateRoomReq {
 
     private String userId;
+
+    private Long characterId1;
+    private Long characterId2;
+    private Long characterId3;
 }

@@ -31,6 +31,13 @@ public class RoomEntity {
 
     private EnvType envType;
 
+    private Long user1Char1;
+    private Long user1Char2;
+    private Long user1Char3;
+
+    private Long user2Char1;
+    private Long user2Char2;
+    private Long user2Char3;
 
     // userId をいれる
     private Long winner;

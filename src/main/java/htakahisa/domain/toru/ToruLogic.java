@@ -16,9 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -53,12 +51,20 @@ public class ToruLogic {
                 RoomEntity room = new RoomEntity();
                 room.setRoomId(UUID.randomUUID().toString());
                 room.setUserId1(req.getUserId());
+                room.setCharacterId1(req.getCharacterId1());
+                room.setUser1Char1(req.getCharacterId1());
+                room.setUser1Char2(req.getCharacterId2());
+                room.setUser1Char3(req.getCharacterId3());
                 room.setUserId2("UNDEFINED");
                 return roomRepository.save(room);
             } else {
 
                 RoomEntity room = undefineds.get(0);
                 room.setUserId2(req.getUserId());
+                room.setCharacterId2(req.getCharacterId1());
+                room.setUser2Char1(req.getCharacterId1());
+                room.setUser2Char2(req.getCharacterId2());
+                room.setUser2Char3(req.getCharacterId3());
                 return roomRepository.save(room);
             }
         } else {
@@ -70,7 +76,11 @@ public class ToruLogic {
         battleResult.setStatus(roomId, battleResultStatus);
     }
 
-    public CharactersEntity getCaracter(GetCharacterReq req) {
+    public void setUserId(String roomId, String userId) {
+        battleResult.setUserId(roomId, userId);
+    }
+
+    public CharactersEntity getCharacter(GetCharacterReq req) {
         return characterRepository.findById(req.getCharacterId()).get();
     }
 
@@ -81,11 +91,9 @@ public class ToruLogic {
         roomRepository.save(room);
 
         boolean commandReady = room.commandReady();
-        return commandReady;
-    }
 
-    public BattleResultRes getBattleResult(String roomId, String userId) {
-        return battleResult.getBattleResult(roomId, userId);
+
+        return commandReady;
     }
 
     public BattleRes battle(BattleReq req) {
@@ -108,10 +116,8 @@ public class ToruLogic {
         // 順番を決める
         List<BattleInfo> battleInfos = List.of(b1, b2);
 
-        BattleRes res = new BattleRes();
-
-
         // バトル
+        BattleResultRes battleResultRes = new BattleResultRes();
         {
             BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
             for (BattleInfo battleInfo : battleInfos) {
@@ -150,6 +156,7 @@ public class ToruLogic {
 
                 }
             }
+            battleResultRes.getResults().add(result);
         }
 
 
@@ -159,13 +166,25 @@ public class ToruLogic {
             }
         }
 
-        // 最後に入力されていた技をクリアする
-//        room.clearWaza();
         roomRepository.save(room);
 
-
         battleResult.setStatus(room.getRoomId(), BattleResultStatus.FINISHED);
+        battleResult.putBattleResult(room.getRoomId(), battleResultRes);
 
+        BattleRes res = new BattleRes();
+        res.setReady(true);
+        return res;
+    }
+
+    public BattleResultRes getBattleResult(String roomId, String userId) {
+        BattleResultRes res = battleResult.getBattleResult(roomId, userId);
+        res.setBattleResultStatus(battleResult.getBattleResultStatus(roomId));
+        if (res.getBattleResultStatus() == BattleResultStatus.COMMAND_WAITING) {
+            RoomEntity room = roomRepository.findById(roomId).get();
+            room.setWazaUser1(null);
+            room.setWazaUser2(null);
+            roomRepository.save(room);
+        }
         return res;
     }
 }
