@@ -30,10 +30,21 @@ public class ToruController {
 
     }
 
+    @PostMapping(value="/getBattleResultStatus")
+    public GetBattleResultStatusRes getBattleResultStatus(@RequestBody GetBattleResultStatusReq req) {
+        return toruService.getBattleResultStatus(req);
+    }
 
     @PostMapping(value="/getCharacter")
     public GetCharacterRes getCharacter(@RequestBody GetCharacterReq req) {
         return toruService.getCharacter(req);
+    }
+
+
+    @PostMapping(value="/setCharacter")
+    @Deprecated
+    public void setCharacter(@RequestBody SetCharacterReq req) {
+//        toruService.setCharacter(req);
     }
 
     @PostMapping(value="/battle")

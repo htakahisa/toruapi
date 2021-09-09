@@ -1,6 +1,7 @@
 package htakahisa.domain.toru;
 
 import htakahisa.controller.dto.*;
+import htakahisa.domain.toru.dto.BattleDto;
 import htakahisa.domain.toru.dto.BattleInfo;
 import htakahisa.domain.toru.dto.BattleResult;
 import htakahisa.domain.toru.dto.MeAndOp;
@@ -13,6 +14,7 @@ import htakahisa.domain.toru.repository.CharacterStatusRepository;
 import htakahisa.domain.toru.repository.CharactersRepository;
 import htakahisa.domain.toru.repository.RoomRepository;
 import htakahisa.domain.toru.repository.WazaRepository;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -75,6 +77,17 @@ public class ToruLogic {
         }
     }
 
+    public void setCharacter(SetCharacterReq req) {
+        RoomEntity room = roomRepository.findById(req.getRoomId()).get();
+        if (room.getUserId1().equals(req.getUserId())) {
+            room.setCharacterId1(req.getCharacterId());
+        } else if (room.getUserId2().equals(req.getUserId())) {
+            room.setCharacterId2(req.getCharacterId());
+        }
+
+        roomRepository.save(room);
+    }
+
     public void setBattleResultStatus(String roomId, BattleResultStatus battleResultStatus) {
         battleResult.setStatus(roomId, battleResultStatus);
     }
@@ -109,8 +122,18 @@ public class ToruLogic {
         }
         roomRepository.save(room);
 
+        if (battleResult.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.CHARACTER_SELECT) {
+            if (room.getChangeCharacterId1() != null && room.getChangeCharacterId2() != null){
+                battleResult.setStatus(req.getRoomId(), BattleResultStatus.COMMAND_WAITING);
+            }
+        }
+
         boolean commandReady = room.commandReady() && battleResult.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.COMMAND_WAITING;
         return commandReady;
+    }
+
+    public BattleResultStatus getBattleResultStatus(String roomId) {
+        return battleResult.getBattleResultStatus(roomId);
     }
 
     public BattleRes battle(BattleReq req) {
@@ -166,161 +189,217 @@ public class ToruLogic {
     private BattleRes getBattleRes(RoomEntity room, List<BattleInfo> battleInfos, MeAndOp meAndOp) {
         // バトル
         BattleResultRes battleResultRes = new BattleResultRes();
-        {
-            // 交代
-            for (BattleInfo battleInfo : battleInfos) {
-                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                if (battleInfo.getWaza().getWaza() == Waza.CHANGE) {
 
-                    Long changeCharacterId = null;
-                    if (battleInfo.getUserId().equals(room.getUserId1())) {
-                        changeCharacterId = room.getChangeCharacterId1();
-                        room.setChangeCharacterId1(null);
-                        room.setCharacterId1(changeCharacterId);
-                        roomRepository.save(room);
-                    } else if (battleInfo.getUserId().equals(room.getUserId2())) {
-                        changeCharacterId = room.getChangeCharacterId2();
-                        room.setChangeCharacterId1(null);
-                        room.setCharacterId2(changeCharacterId);
-                        roomRepository.save(room);
-                    }
+        BattleDto dto = new BattleDto();
 
-                    CharacterStatusEntity change = characterStatusRepository.findByRoomIdAndUserIdAndCharacterId(
-                            battleInfo.getRoom().getRoomId(),
-                            battleInfo.getUserId(),
-                            changeCharacterId);
-                    CharacterStatusEntity old = meAndOp.getMe(battleInfo.getUserId());
-                    old.setTurnCount(0);
-                    characterStatusRepository.save(old);
-
-                    meAndOp.setMe(battleInfo.getUserId(), change);
-
-
-                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                    resultAction.setMessage1("よくやったぞ " + old.getName() + "! 戻っておいで!");
-                    resultAction.setAction(ClientAction.CHANGE);
-                    result.setChange(resultAction);
-                    battleResultRes.getResults().add(result);
-                }
-            }
+        this.change(room, battleInfos, meAndOp, battleResultRes);
+        if (!battleInfos.stream().anyMatch(b -> b.getWaza().getWaza() == Waza.INIT_CHANGE)) {
+            this.inTheBattle(battleInfos, meAndOp, battleResultRes);
+            dto = this.attack(battleInfos, meAndOp, battleResultRes);
+            this.endTheBattle(battleInfos, meAndOp, battleResultRes);
         }
-        {
-
-            for (BattleInfo battleInfo : battleInfos) {
-
-                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                // 最初に場に出た時
-                if (meAndOp.getMe(battleInfo.getUserId()).getTurnCount() == 0) {
-                    if (InAction.IN_THE_BATTLE == battleInfo.getWaza().getInAction()) {
-
-                    }
-
-                    if (SpecialAbility.TORU == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility()) {
-                        BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                        resultAction.setAction(ClientAction.EFFECT);
-                        resultAction.setMessage1("とうやまは登場した瞬間に宇宙人からのスーパービームを受け、攻撃力がぐーんとあがった。");
-                        meAndOp.getMe(battleInfo.getUserId()).setAttackRate(new BigDecimal("1.5"));
-                        result.setInTheBattle(resultAction);
-                        battleResultRes.getResults().add(result);
-                    }
-                }
-                meAndOp.getMe(battleInfo.getUserId())
-                        .setTurnCount(meAndOp.getMe(battleInfo.getUserId()).getTurnCount() + 1);
-
-
-            }
-
-        }
-
-        {
-
-            for (BattleInfo battleInfo : battleInfos) {
-                if (meAndOp.isSomeoneDead()) {
-                    continue;
-                }
-
-                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                //
-                if (InAction.BEFORE_ATTACK == battleInfo.getWaza().getInAction()) {
-
-                }
-
-                if (InAction.IN_ATTACK == battleInfo.getWaza().getInAction()) {
-                    if (ClientAction.ATTACK == battleInfo.getWaza().getClientAction()) {
-                        BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                        resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " の " + battleInfo.getWaza().getName() + "!");
-
-                        if (meAndOp.isHit(battleInfo.getWaza(), battleInfo.getUserId())) {
-                            resultAction.setAction(ClientAction.ATTACK);
-
-                            Long opHp = meAndOp.attack(battleInfo.getWaza(), battleInfo.getUserId());
-                            meAndOp.getOp(battleInfo.getUserId()).setHp(opHp);
-
-                            CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
-                            CharacterStatusEntity copyOp = CharacterStatusEntity.of(meAndOp.getOp(battleInfo.getUserId()));
-
-                            resultAction.setCharacterStatus1(copyMe);
-                            resultAction.setCharacterStatus2(copyOp);
-
-                        } else {
-                            // 当たらなかった
-                            resultAction.setAction(ClientAction.NOT_HIT);
-                            resultAction.setMessage2(meAndOp.getOp(battleInfo.getUserId()).getName() + " には当たらなかった。");
-                        }
-
-                        result.setInAttack(resultAction);
-                        battleResultRes.getResults().add(result);
-
-                    } else if (ClientAction.EFFECT == battleInfo.getWaza().getClientAction()) {
-
-                    } else if (ClientAction.HEALING == battleInfo.getWaza().getClientAction()) {
-
-                    }
-                }
-
-                if (InAction.AFTER_ATTACK == battleInfo.getWaza().getInAction()) {
-
-                }
-            }
-
-        }
-
-        {
-
-            for (BattleInfo battleInfo : battleInfos) {
-
-                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                if (InAction.END_THE_BATTLE == battleInfo.getWaza().getInAction()) {
-
-
-                }
-
-                if (SpecialAbility.TORU == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility() &&
-                        meAndOp.getOp(battleInfo.getUserId()).getHp() <= 0) {
-
-                    BattleResultRes.ResultAction action = new BattleResultRes.ResultAction();
-                    action.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " のいななき!\n敵を倒してテンション爆上がりだ!");
-                    meAndOp.getMe(battleInfo.getUserId())
-                            .setSpeedRate(meAndOp.getMe(battleInfo.getUserId()).getSpeedRate().add(new BigDecimal("0.2")));
-                    action.setMessage2(meAndOp.getMe(battleInfo.getUserId()).getName() + " のすばやさがぐんと上がった!");
-
-                    result.setEndTheBattle(action);
-                    battleResultRes.getResults().add(result);
-                }
-
-            }
-
-        }
-
 
         roomRepository.save(room);
-        battleResult.setStatus(room.getRoomId(), BattleResultStatus.FINISHED);
+        if (dto.isSomeoneDead()) {
+            battleResult.setStatus(room.getRoomId(), BattleResultStatus.CHARACTER_SELECT);
+        } else {
+            battleResult.setStatus(room.getRoomId(), BattleResultStatus.FINISHED);
+        }
         battleResult.putBattleResult(room.getRoomId(), battleResultRes);
 
-
-        BattleRes res = new BattleRes();
-        res.setReady(true);
+        BattleRes res = BattleRes.of(battleResult.getBattleResultStatus(room.getRoomId()));
         return res;
+    }
+
+    private void endTheBattle(List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
+        for (BattleInfo battleInfo : battleInfos) {
+
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+            if (InAction.END_THE_BATTLE == battleInfo.getWaza().getInAction()) {
+
+
+            }
+
+            if (SpecialAbility.TORU == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility() &&
+                    meAndOp.getOp(battleInfo.getUserId()).isDead() &&
+                    !meAndOp.getMe(battleInfo.getUserId()).isDead()
+            ) {
+
+                BattleResultRes.ResultAction action = new BattleResultRes.ResultAction();
+                action.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " のいななき!\n敵を倒してテンション爆上がりだ!");
+                meAndOp.getMe(battleInfo.getUserId())
+                        .setSpeedRate(meAndOp.getMe(battleInfo.getUserId()).getSpeedRate().add(new BigDecimal("0.2")));
+                action.setMessage2(meAndOp.getMe(battleInfo.getUserId()).getName() + " のすばやさがぐんと上がった!");
+
+                result.setEndTheBattle(action);
+                battleResultRes.getResults().add(result);
+            }
+
+        }
+    }
+
+
+    private void change(RoomEntity room, List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
+        // 交代
+        for (BattleInfo battleInfo : battleInfos) {
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+
+            // 別API
+//            if (room.getWinner() == null) {
+//                room.setWinner(0L);
+//                roomRepository.save(room);
+//                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+//                resultAction.setMessage1(battleInfo.getUserId() + " は " +
+//                        meAndOp.getMe(battleInfo.getUserId()).getName() + " をくりだした!");
+//                resultAction.setAction(ClientAction.CHANGE);
+//                result.setChange(resultAction);
+//                battleResultRes.getResults().add(result);
+//            }
+
+            if (battleInfo.getWaza().getWaza() == Waza.CHANGE ||
+                    battleInfo.getWaza().getWaza() == Waza.INIT_CHANGE) {
+
+                Long changeCharacterId = null;
+                if (battleInfo.getUserId().equals(room.getUserId1())) {
+                    changeCharacterId = room.getChangeCharacterId1();
+                    room.setChangeCharacterId1(null);
+                    room.setCharacterId1(changeCharacterId);
+                    roomRepository.save(room);
+                } else if (battleInfo.getUserId().equals(room.getUserId2())) {
+                    changeCharacterId = room.getChangeCharacterId2();
+                    room.setChangeCharacterId1(null);
+                    room.setCharacterId2(changeCharacterId);
+                    roomRepository.save(room);
+                }
+
+                CharacterStatusEntity change = characterStatusRepository.findByRoomIdAndUserIdAndCharacterId(
+                        battleInfo.getRoom().getRoomId(),
+                        battleInfo.getUserId(),
+                        changeCharacterId);
+                CharacterStatusEntity old = meAndOp.getMe(battleInfo.getUserId());
+                old.setTurnCount(0);
+                characterStatusRepository.save(old);
+
+                meAndOp.setMe(battleInfo.getUserId(), change);
+
+
+                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                if (battleInfo.getWaza().getWaza() == Waza.CHANGE) {
+                    resultAction.setMessage1("よくやったぞ " + old.getName() + "! 戻っておいで!");
+                    resultAction.setAction(ClientAction.CHANGE);
+                } else if (battleInfo.getWaza().getWaza() == Waza.INIT_CHANGE) {
+                    resultAction.setMessage1("いけ! " + old.getName() + "!");
+                    resultAction.setAction(ClientAction.INIT_CHANGE);
+                }
+                result.setChange(resultAction);
+                battleResultRes.getResults().add(result);
+            }
+        }
+    }
+
+    private void inTheBattle(List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
+        for (BattleInfo battleInfo : battleInfos) {
+
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+            // 最初に場に出た時
+            if (meAndOp.getMe(battleInfo.getUserId()).getTurnCount() == 0) {
+                if (InAction.IN_THE_BATTLE == battleInfo.getWaza().getInAction()) {
+
+                }
+
+                if (SpecialAbility.TORU == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility()) {
+                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                    resultAction.setAction(ClientAction.EFFECT);
+                    resultAction.setMessage1("とうやまは登場した瞬間に宇宙人からのスーパービームを受け、攻撃力がぐーんとあがった。");
+                    meAndOp.getMe(battleInfo.getUserId()).setAttackRate(new BigDecimal("1.5"));
+                    result.setInTheBattle(resultAction);
+                    battleResultRes.getResults().add(result);
+                }
+            }
+            meAndOp.getMe(battleInfo.getUserId())
+                    .setTurnCount(meAndOp.getMe(battleInfo.getUserId()).getTurnCount() + 1);
+
+
+        }
+    }
+
+    private BattleDto attack(List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
+        for (BattleInfo battleInfo : battleInfos) {
+            if (meAndOp.getMe(battleInfo.getUserId()).isDead()) {
+                continue;
+            }
+
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+            //
+            if (InAction.BEFORE_ATTACK == battleInfo.getWaza().getInAction()) {
+
+            }
+
+            if (InAction.IN_ATTACK == battleInfo.getWaza().getInAction()) {
+
+                if (ClientAction.ATTACK == battleInfo.getWaza().getClientAction()) {
+                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                    resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " の " + battleInfo.getWaza().getName() + "!");
+
+                    if (meAndOp.isHit(battleInfo.getWaza(), battleInfo.getUserId())) {
+                        resultAction.setAction(ClientAction.ATTACK);
+
+                        Long opHp = meAndOp.attack(battleInfo.getWaza(), battleInfo.getUserId());
+                        meAndOp.getOp(battleInfo.getUserId()).setHp(opHp);
+
+                        CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
+                        CharacterStatusEntity copyOp = CharacterStatusEntity.of(meAndOp.getOp(battleInfo.getUserId()));
+
+                        resultAction.setCharacterStatus1(copyMe);
+                        resultAction.setCharacterStatus2(copyOp);
+
+                    } else {
+                        // 当たらなかった
+                        resultAction.setAction(ClientAction.NOT_HIT);
+                        resultAction.setMessage2(meAndOp.getOp(battleInfo.getUserId()).getName() + " には当たらなかった。");
+                    }
+
+                    result.setInAttack(resultAction);
+                    battleResultRes.getResults().add(result);
+
+                } else if (ClientAction.EFFECT == battleInfo.getWaza().getClientAction()) {
+
+                } else if (ClientAction.HEALING == battleInfo.getWaza().getClientAction()) {
+
+                }
+
+
+            }
+
+            if (InAction.AFTER_ATTACK == battleInfo.getWaza().getInAction()) {
+
+            }
+            // 倒れたら終了
+            if (meAndOp.getMe(battleInfo.getUserId()).isDead()) {
+                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()) + " は倒された!");
+                resultAction.setAction(ClientAction.DEAD);
+                result.setChange(resultAction);
+                battleResultRes.getResults().add(result);
+
+                BattleDto dto = new BattleDto();
+                dto.setSomeoneDead(true);
+                return dto;
+            }
+
+            if (meAndOp.getOp(battleInfo.getUserId()).isDead()) {
+                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                resultAction.setMessage1(meAndOp.getOp(battleInfo.getUserId()) + " は倒された!");
+                resultAction.setAction(ClientAction.DEAD);
+                result.setChange(resultAction);
+                battleResultRes.getResults().add(result);
+
+                BattleDto dto = new BattleDto();
+                dto.setSomeoneDead(true);
+                return dto;
+            }
+        }
+        return new BattleDto();
     }
 
 

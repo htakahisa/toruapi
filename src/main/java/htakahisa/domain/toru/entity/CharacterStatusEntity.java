@@ -53,6 +53,10 @@ public class CharacterStatusEntity {
         return speedRate.multiply(BigDecimal.valueOf(speed)).longValue();
     }
 
+    public boolean isDead() {
+        return getHp() <= 0;
+    }
+
     public static CharacterStatusEntity of(String roomId, String userId, CharactersEntity character) {
         CharacterStatusEntity c = new CharacterStatusEntity();
         c.setRoomId(roomId);

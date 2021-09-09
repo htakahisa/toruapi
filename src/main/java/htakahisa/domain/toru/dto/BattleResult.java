@@ -43,6 +43,9 @@ public class BattleResult {
     }
 
     public BattleResultStatus getBattleResultStatus(String roomId) {
+        if (resultMap.get(roomId) == null) {
+            return null;
+        }
         return resultMap.get(roomId).getBattleResultStatus();
     }
 
