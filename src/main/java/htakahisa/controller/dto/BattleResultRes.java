@@ -21,6 +21,8 @@ public class BattleResultRes {
     @Setter
     public static class BattleResult {
 
+        private ResultAction change;
+
         private ResultAction inTheBattle;
 
         private ResultAction beforeAttack;

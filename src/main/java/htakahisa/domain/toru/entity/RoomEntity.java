@@ -25,8 +25,10 @@ public class RoomEntity {
     private String userId2;
 
     private Long characterId1;
-
     private Long characterId2;
+
+    private Long changeCharacterId1;
+    private Long changeCharacterId2;
 
     @Enumerated(EnumType.STRING)
     private Waza wazaUser1;

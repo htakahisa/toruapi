@@ -26,6 +26,8 @@ public class ToruService {
         toruLogic.setBattleResultStatus(room.getRoomId(), BattleResultStatus.COMMAND_WAITING);
         toruLogic.setUserId(room.getRoomId(), req.getUserId());
         toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId1());
+        toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId2());
+        toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId3());
 
         CreateRoomRes res = new CreateRoomRes();
         res.setRoomId(room.getRoomId());
@@ -54,10 +56,13 @@ public class ToruService {
 
         toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.BATTLE);
         // コマンド実行
-        BattleRes res = toruLogic.battle(req);
-
-
-        return res;
+        try {
+            BattleRes res = toruLogic.battle(req);
+            return res;
+        } catch (Exception e) {
+            toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.COMMAND_WAITING);
+            throw new RuntimeException(e);
+        }
     }
 
 

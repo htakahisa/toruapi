@@ -13,4 +13,6 @@ public class BattleReq {
     private String userId;
 
     private Waza waza;
+
+    private Long changeCharacterId;
 }

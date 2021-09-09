@@ -1,12 +1,10 @@
 package htakahisa.domain.toru.entity;
 
+import htakahisa.domain.toru.enums.SpecialAbility;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.math.BigDecimal;
 
 @Entity(name = "character_status")
@@ -40,6 +38,9 @@ public class CharacterStatusEntity {
     @Column(nullable= false, precision=20, scale=2)
     private BigDecimal dodgeRate;
 
+    @Enumerated(EnumType.STRING)
+    private SpecialAbility specialAbility;
+
 
     private BigDecimal attackRate = BigDecimal.ONE;
     private BigDecimal speedRate = BigDecimal.ONE;
@@ -62,7 +63,7 @@ public class CharacterStatusEntity {
         c.setHp(character.getHp());
         c.setName(character.getName());
         c.setSpeed(character.getSpeed());
-
+        c.setSpecialAbility(character.getSpecialAbility());
 
         return c;
     }
