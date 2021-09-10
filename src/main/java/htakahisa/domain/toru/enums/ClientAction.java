@@ -10,5 +10,6 @@ public enum ClientAction {
     ATTACK,
     HEALING,
     EFFECT,
+    GIVE_UP,
     ;
 }

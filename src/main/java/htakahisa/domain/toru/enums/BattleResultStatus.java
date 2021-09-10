@@ -6,6 +6,8 @@ public enum BattleResultStatus {
     COMMAND_WAITING,
     BATTLE,
     FINISHED,       // バトル結果
+    GIVE_UP1,
+    GIVE_UP2,
     BATTLE_FINISED, // 試合終了
     ;
 }

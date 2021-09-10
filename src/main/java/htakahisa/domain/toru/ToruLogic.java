@@ -197,22 +197,52 @@ public class ToruLogic {
 
         BattleDto dto = new BattleDto();
 
-        this.change(room, battleInfos, meAndOp, battleResultRes);
-        if (!battleInfos.stream().anyMatch(b -> b.getWaza().getWaza() == Waza.INIT_CHANGE)) {
-            this.inTheBattle(battleInfos, meAndOp, battleResultRes);
-            dto = this.attack(battleInfos, meAndOp, battleResultRes);
-            if (!dto.isEndBattle()) {
-                this.endTheBattle(battleInfos, meAndOp, battleResultRes);
+        if (!this.isGiveUp(room, battleInfos, meAndOp, battleResultRes)) {
+            this.change(room, battleInfos, meAndOp, battleResultRes);
+            if (!battleInfos.stream().anyMatch(b -> b.getWaza().getWaza() == Waza.INIT_CHANGE)) {
+                this.inTheBattle(battleInfos, meAndOp, battleResultRes);
+                dto = this.attack(battleInfos, meAndOp, battleResultRes);
+                if (!dto.isEndBattle()) {
+                    this.endTheBattle(battleInfos, meAndOp, battleResultRes);
+                }
             }
+            battleResult.setStatus(room.getRoomId(), BattleResultStatus.FINISHED);
         }
 
-        roomRepository.save(room);
-        battleResult.setStatus(room.getRoomId(), BattleResultStatus.FINISHED);
-
         battleResult.putBattleResult(room.getRoomId(), battleResultRes, meAndOp.isSomeoneDead());
-
         BattleRes res = BattleRes.of(battleResult.getBattleResultStatus(room.getRoomId()));
         return res;
+    }
+
+    private boolean isGiveUp(RoomEntity room, List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
+
+        List<BattleInfo> giveUps = battleInfos.stream()
+                .filter(b -> b.getWaza().getWaza() == Waza.GIVE_UP)
+                .collect(Collectors.toList());
+
+        if (giveUps.size() > 0) {
+
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+            BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+
+            resultAction.setMessage1("降参が選ばれました。");
+            resultAction.setAction(ClientAction.GIVE_UP);
+
+            if (giveUps.get(0).getUserId().equals(room.getUserId1())) {
+                resultAction.setCharacterStatus1(meAndOp.getMe(room.getUserId1()));
+                battleResult.setStatus(room.getRoomId(), BattleResultStatus.GIVE_UP1);
+            } else if (giveUps.get(0).getUserId().equals(room.getUserId2())) {
+                resultAction.setCharacterStatus1(meAndOp.getMe(room.getUserId2()));
+                battleResult.setStatus(room.getRoomId(), BattleResultStatus.GIVE_UP2);
+            }
+
+            result.setInTheBattle(resultAction);
+            battleResultRes.getResults().add(result);
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void change(RoomEntity room, List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
@@ -436,6 +466,12 @@ public class ToruLogic {
                 .allMatch(c -> c.getHp() <= 0) ) {
             res.setBattleResultStatus(BattleResultStatus.BATTLE_FINISED);
             room.setWinner(2L);
+        } else if (battleResult.getBattleResultStatus(roomId) == BattleResultStatus.GIVE_UP1) {
+            res.setBattleResultStatus(BattleResultStatus.BATTLE_FINISED);
+            room.setWinner(2L);
+        } else if (battleResult.getBattleResultStatus(roomId) == BattleResultStatus.GIVE_UP2) {
+            res.setBattleResultStatus(BattleResultStatus.BATTLE_FINISED);
+            room.setWinner(1L);
         } else {
             res.setBattleResultStatus(battleResult.getBattleResultStatus(roomId));
         }
