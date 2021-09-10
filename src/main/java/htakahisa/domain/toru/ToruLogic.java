@@ -311,7 +311,7 @@ public class ToruLogic {
                     BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                     resultAction.setAction(ClientAction.EFFECT);
                     resultAction.setMessage1("とうやまは登場した瞬間に宇宙人からのスーパービームを受け、攻撃力がぐーんとあがった。");
-                    meAndOp.getMe(battleInfo.getUserId()).setAttackRate(new BigDecimal("1.5"));
+                    meAndOp.getMe(battleInfo.getUserId()).addAttackRate(new BigDecimal("0.5"));
                     result.setInTheBattle(resultAction);
                     battleResultRes.getResults().add(result);
                 }
@@ -389,6 +389,7 @@ public class ToruLogic {
                     resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " の " +
                             battleInfo.getWaza().getName() +"!");
                     resultAction.setMessage2("傷が回復した!");
+                    resultAction.setAction(ClientAction.HEALING);
 
                     result.setInAttack(resultAction);
                     battleResultRes.getResults().add(result);
@@ -405,6 +406,7 @@ public class ToruLogic {
                     BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                     resultAction.setMessage1(meAndOp.getOp(battleInfo.getUserId()).getName() + " はやけどを負った!");
                     resultAction.setCharacterStatus1(meAndOp.getOp(battleInfo.getUserId()));
+                    resultAction.setAction(ClientAction.EFFECT);
                     result.setInAttack(resultAction);
                     battleResultRes.getResults().add(result);
                 }
@@ -439,7 +441,7 @@ public class ToruLogic {
                 CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
                 resultAction.setCharacterStatus1(copyMe);
                 resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " はやけどのダメージを受けた!");
-
+                resultAction.setAction(ClientAction.ATTACK);
                 result.setAfterAttack(resultAction);
                 battleResultRes.getResults().add(result);
 
@@ -449,7 +451,7 @@ public class ToruLogic {
                     return;
                 }
             }
-            
+
             if (SpecialAbility.TORU == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility() &&
                     meAndOp.getOp(battleInfo.getUserId()).isDead() &&
                     !meAndOp.getMe(battleInfo.getUserId()).isDead()
@@ -458,9 +460,9 @@ public class ToruLogic {
                 BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                 resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " のいななき!\n敵を倒してテンション爆上がりだ!");
                 meAndOp.getMe(battleInfo.getUserId())
-                        .setSpeedRate(meAndOp.getMe(battleInfo.getUserId()).getSpeedRate().add(new BigDecimal("0.25")));
+                        .addSpeedRate(new BigDecimal("0.25"));
                 resultAction.setMessage2(meAndOp.getMe(battleInfo.getUserId()).getName() + " のすばやさがぐんと上がった!");
-
+                resultAction.setAction(ClientAction.EFFECT);
                 CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
                 resultAction.setCharacterStatus1(copyMe);
 

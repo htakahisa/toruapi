@@ -50,6 +50,22 @@ public class CharacterStatusEntity {
     private BigDecimal attackRate = BigDecimal.ONE;
     private BigDecimal speedRate = BigDecimal.ONE;
 
+    public void addAttackRate(BigDecimal rate) {
+        if (this.attackRate.add(rate).compareTo(BigDecimal.valueOf(3)) > 0 ||
+                this.attackRate.add(rate).compareTo(new BigDecimal("0.25")) <= 0) {
+            return;
+        }
+        this.attackRate = this.attackRate.add(rate);
+    }
+
+    public void addSpeedRate(BigDecimal rate) {
+        if (this.speedRate.add(rate).compareTo(BigDecimal.valueOf(3)) > 0 ||
+                this.speedRate.add(rate).compareTo(new BigDecimal("0.25")) <= 0) {
+            return;
+        }
+        this.speedRate = this.speedRate.add(rate);
+    }
+
     public Long getAttack() {
         return attackRate.multiply(BigDecimal.valueOf(attack)).longValue();
     }
