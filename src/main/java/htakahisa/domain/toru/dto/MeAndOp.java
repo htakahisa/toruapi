@@ -35,7 +35,7 @@ public class MeAndOp {
         BigDecimal hitRate = waza.getHitRate().add(getMe(userId).getDodgeRate());
         int i = new Random().nextInt(100) + 1;
 
-        return hitRate.multiply(new BigDecimal("100")).intValue() < i;
+        return hitRate.multiply(new BigDecimal("100")).intValue() >= i;
     }
 
     public boolean isSomeoneDead() {

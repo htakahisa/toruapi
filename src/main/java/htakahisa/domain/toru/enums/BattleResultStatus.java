@@ -5,6 +5,7 @@ public enum BattleResultStatus {
     CHARACTER_SELECT,
     COMMAND_WAITING,
     BATTLE,
-    FINISHED,
+    FINISHED,       // バトル結果
+    BATTLE_FINISED, // 試合終了
     ;
 }

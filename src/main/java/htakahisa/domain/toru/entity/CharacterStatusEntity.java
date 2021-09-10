@@ -75,6 +75,7 @@ public class CharacterStatusEntity {
     public static CharacterStatusEntity of(CharacterStatusEntity from) {
         CharacterStatusEntity to = new CharacterStatusEntity();
         to.setTurnCount(from.getTurnCount());
+        to.setUserId(from.getUserId());
         to.setAttackRate(from.getAttackRate());
         to.setCharacterId(from.getCharacterId());
         to.setAttack(from.getAttack());
@@ -85,7 +86,14 @@ public class CharacterStatusEntity {
         to.setRoomId(from.getRoomId());
         to.setId(from.getId());
         to.setSpeedRate(from.getSpeedRate());
+        to.setSpecialAbility(from.getSpecialAbility());
 
         return to;
+    }
+
+    public void initData() {
+        this.setTurnCount(0);
+        this.setSpeedRate(BigDecimal.ONE);
+        this.setAttackRate(BigDecimal.ONE);
     }
 }

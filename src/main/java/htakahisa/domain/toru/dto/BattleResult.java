@@ -23,10 +23,11 @@ public class BattleResult {
         resultMap.get(roomId).setBattleResultStatus(battleResultStatus);
     }
 
-    public void putBattleResult(String roomId, BattleResultRes res) {
+    public void putBattleResult(String roomId, BattleResultRes res, boolean isSomeoneDead) {
 
         ResultInfo resultInfo = resultMap.get(roomId);
         resultInfo.setRes(res);
+        resultInfo.setSomeoneDead(isSomeoneDead);
         resultMap.put(roomId, resultInfo);
     }
 
@@ -36,7 +37,12 @@ public class BattleResult {
         resultInfo.getUserIds().remove(userId);
 
         if (resultInfo.getUserIds().size() == 0) {
-            resultInfo.setBattleResultStatus(BattleResultStatus.COMMAND_WAITING);
+
+            if (resultInfo.isSomeoneDead()) {
+                resultInfo.setBattleResultStatus(BattleResultStatus.CHARACTER_SELECT);
+            } else {
+                resultInfo.setBattleResultStatus(BattleResultStatus.COMMAND_WAITING);
+            }
         }
 
         return resultInfo.getRes();
@@ -63,6 +69,7 @@ public class BattleResult {
 
         private Set<String> userIds = new HashSet<>();
 
+        private boolean isSomeoneDead;
     }
 
 }

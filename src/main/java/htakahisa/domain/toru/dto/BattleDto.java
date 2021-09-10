@@ -8,4 +8,6 @@ import lombok.Setter;
 public class BattleDto {
 
     private boolean someoneDead;
+
+    private boolean endBattle;
 }

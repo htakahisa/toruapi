@@ -63,6 +63,10 @@ public class ToruService {
 
         toruLogic.setUserId(req.getRoomId(), req.getUserId());
 
+        if (toruLogic.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.BATTLE_FINISED) {
+            return BattleRes.of(BattleResultStatus.BATTLE_FINISED);
+        }
+
         // roomId とユーザーのチェック
         if(!toruLogic.setReadyBattle(req)) {
             return BattleRes.of(toruLogic.getBattleResultStatus(req.getRoomId()));
@@ -82,7 +86,11 @@ public class ToruService {
 
     @Transactional
     public BattleResultRes getResult(BattleResultReq req) {
-
+        if (toruLogic.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.BATTLE_FINISED) {
+            BattleResultRes r  = new BattleResultRes();
+            r.setBattleResultStatus(BattleResultStatus.BATTLE_FINISED);
+            return r;
+        }
 
         BattleResultRes res = toruLogic.getBattleResult(req.getRoomId(), req.getUserId());
 
