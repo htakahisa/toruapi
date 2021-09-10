@@ -7,12 +7,24 @@
 	"item": [
 		{
 			"name": "http://localhost:20001/createRoom",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const json = JSON.parse(responseBody);",
+							"postman.setGlobalVariable(\"roomId\", json.roomId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"userId\" : \"とる\",\n    \"characterId1\" : 1,\n    \"characterId2\" : 3,\n    \"characterId3\" : 4\n}",
+					"raw": "{\n    \"userId\" : \"まる\",\n    \"characterId1\" : 1,\n    \"characterId2\" : 8,\n    \"characterId3\" : 6\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -96,7 +108,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"roomId\" : \"b06d205d-1032-4288-be3c-0a2ccf279b88\",\n    \"userId\" : \"とる\",\n    \"waza\" : \"PUNCH\",\n    \"changeCharacterId\" : null\n}\n",
+					"raw": "{\n    \"roomId\" : \"{{roomId}}\",\n    \"userId\" : \"まる\",\n    \"waza\" : \"KYOUUN\",\n    \"changeCharacterId\" : null\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -124,7 +136,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"roomId\" : \"b06d205d-1032-4288-be3c-0a2ccf279b88\",\n    \"userId\" : \"とる\"\n\n}",
+					"raw": "{\n    \"roomId\" : \"{{roomId}}\",\n    \"userId\" : \"とる\"\n\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -152,7 +164,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"roomId\" : \"05483330-b0a3-4d16-b45c-878ba9e4b975\"\n}",
+					"raw": "{\n    \"roomId\" : \"{{roomId}}\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
