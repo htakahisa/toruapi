@@ -38,6 +38,7 @@ public class WazaEntity {
     // 追加効果
     @Enumerated(EnumType.STRING)
     private AppendEffect appendEffect;
+    private BigDecimal appendEffectRate;
 
     private BigDecimal hitRate;
 

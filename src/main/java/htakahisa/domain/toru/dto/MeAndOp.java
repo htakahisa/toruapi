@@ -38,6 +38,13 @@ public class MeAndOp {
         return hitRate.multiply(new BigDecimal("100")).intValue() >= i;
     }
 
+    public boolean isAppendEffect(WazaEntity waza) {
+        BigDecimal appendEffectRate = waza.getAppendEffectRate();
+        int i = new Random().nextInt(100) + 1;
+
+        return appendEffectRate.multiply(new BigDecimal("100")).intValue() >= i;
+    }
+
     public boolean isSomeoneDead() {
         return characterStatus1.getHp() <= 0 || characterStatus2.getHp() <= 0;
     }

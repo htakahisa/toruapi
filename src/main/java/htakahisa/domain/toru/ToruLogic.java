@@ -324,11 +324,15 @@ public class ToruLogic {
     }
 
     private BattleDto attack(List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
+
+
+
         for (BattleInfo battleInfo : battleInfos) {
             if (meAndOp.getMe(battleInfo.getUserId()).isDead()) {
                 continue;
             }
 
+            boolean isEffectHit = false;
 
             //
             if (InAction.BEFORE_ATTACK == battleInfo.getWaza().getInAction()) {
@@ -337,12 +341,14 @@ public class ToruLogic {
 
             if (InAction.IN_ATTACK == battleInfo.getWaza().getInAction()) {
                 BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                if (ClientAction.ATTACK == battleInfo.getWaza().getClientAction()) {
+
+                if (ClientAction.ATTACK == battleInfo.getWaza().getClientAction() ||
+                        ClientAction.EFFECT == battleInfo.getWaza().getClientAction()) {
                     BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                     resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " の " + battleInfo.getWaza().getName() + "!");
 
                     if (meAndOp.isHit(battleInfo.getWaza(), battleInfo.getUserId())) {
-                        resultAction.setAction(ClientAction.ATTACK);
+                        resultAction.setAction(battleInfo.getWaza().getClientAction());
 
                         Long opHp = meAndOp.attack(battleInfo.getWaza(), battleInfo.getUserId());
                         meAndOp.getOp(battleInfo.getUserId()).setHp(opHp);
@@ -352,6 +358,9 @@ public class ToruLogic {
 
                         resultAction.setCharacterStatus1(copyMe);
                         resultAction.setCharacterStatus2(copyOp);
+
+                        // EFFECT があたったら true (ここはあたった場合なので EFFECT なら true にする)
+                        isEffectHit = ClientAction.EFFECT == battleInfo.getWaza().getClientAction();
 
                     } else {
                         // 当たらなかった
@@ -364,8 +373,6 @@ public class ToruLogic {
 
                     result.setInAttack(resultAction);
                     battleResultRes.getResults().add(result);
-
-                } else if (ClientAction.EFFECT == battleInfo.getWaza().getClientAction()) {
 
                 } else if (ClientAction.HEALING == battleInfo.getWaza().getClientAction()) {
                     BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
@@ -390,43 +397,25 @@ public class ToruLogic {
 
             }
 
+            if (isEffectHit && battleInfo.getWaza().getAppendEffect() == AppendEffect.YAKEDO) {
+                if (meAndOp.isAppendEffect(battleInfo.getWaza())) {
+                    meAndOp.getOp(battleInfo.getUserId()).setAppendEffect(AppendEffect.YAKEDO);
+
+                    BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                    resultAction.setMessage1(meAndOp.getOp(battleInfo.getUserId()).getName() + " はやけどを負った!");
+                    resultAction.setCharacterStatus1(meAndOp.getOp(battleInfo.getUserId()));
+                    result.setInAttack(resultAction);
+                    battleResultRes.getResults().add(result);
+                }
+            }
+
             if (InAction.AFTER_ATTACK == battleInfo.getWaza().getInAction()) {
 
             }
-            // 倒れたら終了
-            if (meAndOp.getMe(battleInfo.getUserId()).isDead()) {
-                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " は倒された!");
-                resultAction.setAction(ClientAction.DEAD);
-                CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
 
-                resultAction.setCharacterStatus1(copyMe);
-
-                result.setAfterAttack(resultAction);
-                battleResultRes.getResults().add(result);
-
-                BattleDto dto = new BattleDto();
-                dto.setSomeoneDead(true);
-                dto.setEndBattle(this.finishedBattle(battleInfo.getRoom().getRoomId()));
-                return dto;
-            }
-
-            if (meAndOp.getOp(battleInfo.getUserId()).isDead()) {
-                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
-                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
-                resultAction.setMessage1(meAndOp.getOp(battleInfo.getUserId()).getName() + " は倒された!");
-                resultAction.setAction(ClientAction.DEAD);
-
-                CharacterStatusEntity copyOp = CharacterStatusEntity.of(meAndOp.getOp(battleInfo.getUserId()));
-                resultAction.setCharacterStatus2(copyOp);
-
-                result.setAfterAttack(resultAction);
-                battleResultRes.getResults().add(result);
-
-                BattleDto dto = new BattleDto();
-                dto.setSomeoneDead(true);
-                dto.setEndBattle(this.finishedBattle(battleInfo.getRoom().getRoomId()));
+            BattleDto dto = this.isDead(meAndOp, battleResultRes, battleInfo);
+            if (dto != null) {
                 return dto;
             }
         }
@@ -437,17 +426,35 @@ public class ToruLogic {
     private void endTheBattle(List<BattleInfo> battleInfos, MeAndOp meAndOp, BattleResultRes battleResultRes) {
         for (BattleInfo battleInfo : battleInfos) {
 
-            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
             if (InAction.END_THE_BATTLE == battleInfo.getWaza().getInAction()) {
-
 
             }
 
+            if (meAndOp.getMe(battleInfo.getUserId()).getAppendEffect() == AppendEffect.YAKEDO) {
+                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+                BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+
+                meAndOp.getMe(battleInfo.getUserId()).appendEffect();
+
+                CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
+                resultAction.setCharacterStatus1(copyMe);
+                resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " はやけどのダメージを受けた!");
+
+                result.setAfterAttack(resultAction);
+                battleResultRes.getResults().add(result);
+
+                this.isDead(meAndOp, battleResultRes, battleInfo);
+                BattleDto dto = this.isDead(meAndOp, battleResultRes, battleInfo);
+                if (dto != null) {
+                    return;
+                }
+            }
+            
             if (SpecialAbility.TORU == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility() &&
                     meAndOp.getOp(battleInfo.getUserId()).isDead() &&
                     !meAndOp.getMe(battleInfo.getUserId()).isDead()
             ) {
-
+                BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
                 BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                 resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " のいななき!\n敵を倒してテンション爆上がりだ!");
                 meAndOp.getMe(battleInfo.getUserId())
@@ -463,6 +470,48 @@ public class ToruLogic {
 
         }
     }
+
+
+    private BattleDto isDead(MeAndOp meAndOp, BattleResultRes battleResultRes, BattleInfo battleInfo) {
+        // 倒れたら終了
+        if (meAndOp.getMe(battleInfo.getUserId()).isDead()) {
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+            BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+            resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " は倒された!");
+            resultAction.setAction(ClientAction.DEAD);
+            CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
+
+            resultAction.setCharacterStatus1(copyMe);
+
+            result.setAfterAttack(resultAction);
+            battleResultRes.getResults().add(result);
+
+            BattleDto dto = new BattleDto();
+            dto.setSomeoneDead(true);
+            dto.setEndBattle(this.finishedBattle(battleInfo.getRoom().getRoomId()));
+            return dto;
+        }
+
+        if (meAndOp.getOp(battleInfo.getUserId()).isDead()) {
+            BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+            BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+            resultAction.setMessage1(meAndOp.getOp(battleInfo.getUserId()).getName() + " は倒された!");
+            resultAction.setAction(ClientAction.DEAD);
+
+            CharacterStatusEntity copyOp = CharacterStatusEntity.of(meAndOp.getOp(battleInfo.getUserId()));
+            resultAction.setCharacterStatus2(copyOp);
+
+            result.setAfterAttack(resultAction);
+            battleResultRes.getResults().add(result);
+
+            BattleDto dto = new BattleDto();
+            dto.setSomeoneDead(true);
+            dto.setEndBattle(this.finishedBattle(battleInfo.getRoom().getRoomId()));
+            return dto;
+        }
+        return null;
+    }
+
 
 
 

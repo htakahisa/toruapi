@@ -62,6 +62,13 @@ public class CharacterStatusEntity {
         return getHp() <= 0;
     }
 
+    public void appendEffect() {
+        if (AppendEffect.YAKEDO == appendEffect) {
+            Long damage = this.getOrgHp() / 8;
+            this.setHp(this.getHp() - damage);
+        }
+    }
+
     public void healing(Long heal, Long originalHp) {
         BigDecimal healingRate = BigDecimal.valueOf(heal).divide(BigDecimal.valueOf(100), 2, RoundingMode.DOWN);
 

@@ -15,6 +15,7 @@ public enum Waza {
     CHARGEBEAM,
     KYOUUN,
     OBENTO, // お弁当 (回復)
+    HONOU, // 炎 (特殊)
     ;
 
 }
