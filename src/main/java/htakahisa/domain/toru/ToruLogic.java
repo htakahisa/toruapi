@@ -368,7 +368,23 @@ public class ToruLogic {
                 } else if (ClientAction.EFFECT == battleInfo.getWaza().getClientAction()) {
 
                 } else if (ClientAction.HEALING == battleInfo.getWaza().getClientAction()) {
+                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                    meAndOp.getMe(battleInfo.getUserId())
+                            .healing(battleInfo.getWaza().getPower(),
+                                    meAndOp.getMe(battleInfo.getUserId()).getOrgHp());
 
+                    CharacterStatusEntity copyMe = CharacterStatusEntity.of(meAndOp.getMe(battleInfo.getUserId()));
+                    CharacterStatusEntity copyOp = CharacterStatusEntity.of(meAndOp.getOp(battleInfo.getUserId()));
+
+                    resultAction.setCharacterStatus1(copyMe);
+                    resultAction.setCharacterStatus2(copyOp);
+
+                    resultAction.setMessage1(meAndOp.getMe(battleInfo.getUserId()).getName() + " の " +
+                            battleInfo.getWaza().getName() +"!");
+                    resultAction.setMessage2("傷が回復した!");
+
+                    result.setInAttack(resultAction);
+                    battleResultRes.getResults().add(result);
                 }
 
 

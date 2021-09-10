@@ -14,6 +14,7 @@ public enum Waza {
     BRILLIANTCOKTAILS,
     CHARGEBEAM,
     KYOUUN,
+    OBENTO, // お弁当 (回復)
     ;
 
 }
