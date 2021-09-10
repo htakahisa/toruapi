@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.35)
 # Database: toruapi
-# Generation Time: 2021-09-10 08:17:08 +0000
+# Generation Time: 2021-09-10 21:51:49 +0000
 # ************************************************************
 
 
@@ -28,7 +28,7 @@ LOCK TABLES `characters` WRITE;
 
 INSERT INTO `characters` (`id`, `attack`, `dodge_rate`, `hp`, `name`, `special_ability`, `speed`, `waza1`, `waza2`, `waza3`, `waza4`)
 VALUES
-	(1,90,0.00,30,'とうやま','TORU',30,'PUNCH','PUNCH','PUNCH','PUNCH'),
+	(1,90,0.00,900,'とうやま','TORU',30,'PUNCH','PUNCH','PUNCH','PUNCH'),
 	(2,80,0.10,70,'おもこ','NONE',150,'PUNCH','PUNCH','PUNCH','PUNCH'),
 	(3,100,0.00,90,'まーやま','NONE',30,'PUNCH','PUNCH','PUNCH','PUNCH'),
 	(4,40,0.00,150,'はてな','NONE',90,'PUNCH','PUNCH','PUNCH','PUNCH'),
@@ -47,16 +47,19 @@ UNLOCK TABLES;
 LOCK TABLES `waza` WRITE;
 /*!40000 ALTER TABLE `waza` DISABLE KEYS */;
 
-INSERT INTO `waza` (`waza`, `append_effect`, `client_action`, `cp`, `in_action`, `name`, `power`, `priority`, `hit_rate`)
+INSERT INTO `waza` (`waza`, `append_effect`, `client_action`, `cp`, `in_action`, `name`, `power`, `priority`, `hit_rate`, `append_effect_rate`)
 VALUES
-	('BRILLIANTCOKTAILS','NONE','ATTACK',5,'IN_ATTACK','ブリリアントカクテル',40,0,1.00),
-	('CHANGE','NONE','CHANGE',999,'CHANGE','交代',0,99,0.00),
-	('CHARGEBEAM','NONE','ATTACK',1,'IN_ATTACK','チャージビーム',50,0,0.90),
-	('INIT_CHANGE','NONE','INIT_CHANGE',999,'CHANGE','交代',0,99,0.00),
-	('KICK','NONE','ATTACK',10,'IN_ATTACK','キック',30,0,0.90),
-	('KYOUUN','NONE','ATTACK',10,'IN_ATTACK','強運',30,1,1.00),
-	('NONE','NONE','NONE',999,'NONE','NONE',0,99,0.00),
-	('PUNCH','NONE','ATTACK',10,'IN_ATTACK','パンチ',20,0,1.00);
+	('BRILLIANTCOKTAILS','NONE','ATTACK',5,'IN_ATTACK','ブリリアントカクテル',40,0,1.00,0.00),
+	('CHANGE','NONE','CHANGE',999,'CHANGE','交代',0,99,0.00,0.00),
+	('CHARGEBEAM','NONE','ATTACK',1,'IN_ATTACK','チャージビーム',50,0,0.90,0.00),
+	('GIVE_UP','NONE','GIVE_UP',999,'IN_THE_BATTLE','降参',0,99,0.00,0.00),
+	('HONOU','YAKEDO','EFFECT',10,'IN_ATTACK','ほのう',20,0,1.00,0.85),
+	('INIT_CHANGE','NONE','INIT_CHANGE',999,'CHANGE','交代',0,99,0.00,0.00),
+	('KICK','NONE','ATTACK',10,'IN_ATTACK','キック',30,0,0.90,0.00),
+	('KYOUUN','NONE','ATTACK',10,'IN_ATTACK','強運',30,1,1.00,0.00),
+	('NONE','NONE','NONE',999,'NONE','NONE',0,99,0.00,0.00),
+	('OBENTO','NONE','HEALING',10,'IN_ATTACK','お弁当',50,0,1.00,0.00),
+	('PUNCH','NONE','ATTACK',10,'IN_ATTACK','パンチ',20,0,1.00,0.00);
 
 /*!40000 ALTER TABLE `waza` ENABLE KEYS */;
 UNLOCK TABLES;
