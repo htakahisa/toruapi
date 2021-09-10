@@ -43,3 +43,4 @@ docker/docker/db
 .gradle
 .gradle
 .gradle
+db/.DS_Store
