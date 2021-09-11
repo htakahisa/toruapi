@@ -11,11 +11,11 @@ public enum Waza {
     CHANGE, // 交代
     INIT_CHANGE, // 初回交代
     GIVE_UP, // 降参
-    BRILLIANTCOKTAILS,
-    CHARGEBEAM,
-    KYOUUN,
+    BRILLIANTCOKTAILS, //　ブリリアントカクテル
+    CHARGEBEAM, //　チャージビーム
+    KYOUUN,// 強運
     OBENTO, // お弁当 (回復)
-    HONOU, // 炎 (特殊)
+    FIRE, // 炎 (特殊)
     ;
 
 }

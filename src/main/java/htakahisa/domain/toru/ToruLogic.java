@@ -315,6 +315,24 @@ public class ToruLogic {
                     result.setInTheBattle(resultAction);
                     battleResultRes.getResults().add(result);
                 }
+
+                }if (SpecialAbility.OMOKO == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility()) {
+                    BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                    resultAction.setAction(ClientAction.EFFECT);
+                    resultAction.setMessage1("おもこはちょうど通りかかった飛行機につかまって、ぐぐーんと上がった！");
+                    meAndOp.getMe(battleInfo.getUserId()).addSpeedRate(new BigDecimal("2"));
+                    result.setInTheBattle(resultAction);
+                    battleResultRes.getResults().add(result);
+            }
+                 if (SpecialAbility.VALIOM == meAndOp.getMe(battleInfo.getUserId()).getSpecialAbility()) {
+                    BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
+                    BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
+                    resultAction.setAction(ClientAction.EFFECT);
+                     resultAction.setMessage1("ヴァリオン");
+                      meAndOp.getMe(battleInfo.getUserId()).addSpeedRate(new BigDecimal("2"));
+                     result.setInTheBattle(resultAction);
+                     battleResultRes.getResults().add(result);
             }
             meAndOp.getMe(battleInfo.getUserId())
                     .setTurnCount(meAndOp.getMe(battleInfo.getUserId()).getTurnCount() + 1);

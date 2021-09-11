@@ -4,6 +4,8 @@ public enum SpecialAbility {
 
     NONE,
     TORU,
+    OMOKO,
+    VALIOM,
     ;
 
 }
