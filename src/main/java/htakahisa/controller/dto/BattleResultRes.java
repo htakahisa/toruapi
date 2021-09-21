@@ -13,6 +13,8 @@ import java.util.List;
 @Setter
 public class BattleResultRes {
 
+    private String battleResultId;
+
     private BattleResultStatus battleResultStatus;
 
     private List<BattleResult> results = new ArrayList<>();

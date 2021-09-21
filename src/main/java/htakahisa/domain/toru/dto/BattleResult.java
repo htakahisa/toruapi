@@ -12,7 +12,7 @@ public class BattleResult {
 
     private Map<String/*roomId*/, ResultInfo> resultMap = new HashMap<>();
 
-    public void setStatus(String roomId, BattleResultStatus battleResultStatus) {
+    public void initBattleStatus(String roomId) {
 
         ResultInfo resultInfo = resultMap.get(roomId);
         if (resultInfo == null) {
@@ -20,11 +20,13 @@ public class BattleResult {
             resultMap.put(roomId, resultInfo);
         }
 
-        resultMap.get(roomId).setBattleResultStatus(battleResultStatus);
+//        resultMap.get(roomId).setBattleResultStatus(battleResultStatus);
     }
 
     public void putBattleResult(String roomId, BattleResultRes res, boolean isSomeoneDead) {
 
+
+        res.setBattleResultId(UUID.randomUUID().toString());
         ResultInfo resultInfo = resultMap.get(roomId);
         resultInfo.setRes(res);
         resultInfo.setSomeoneDead(isSomeoneDead);
@@ -36,24 +38,24 @@ public class BattleResult {
 
         resultInfo.getUserIds().remove(userId);
 
-        if (resultInfo.getUserIds().size() == 0) {
-
-            if (resultInfo.isSomeoneDead()) {
-                resultInfo.setBattleResultStatus(BattleResultStatus.CHARACTER_SELECT);
-            } else {
-                resultInfo.setBattleResultStatus(BattleResultStatus.COMMAND_WAITING);
-            }
-        }
+//        if (resultInfo.getUserIds().size() == 0) {
+//
+//            if (resultInfo.isSomeoneDead()) {
+//                resultInfo.setBattleResultStatus(BattleResultStatus.CHARACTER_SELECT);
+//            } else {
+//                resultInfo.setBattleResultStatus(BattleResultStatus.COMMAND_WAITING);
+//            }
+//        }
 
         return resultInfo.getRes();
     }
 
-    public BattleResultStatus getBattleResultStatus(String roomId) {
-        if (resultMap.get(roomId) == null) {
-            return null;
-        }
-        return resultMap.get(roomId).getBattleResultStatus();
-    }
+//    public BattleResultStatus getBattleResultStatus(String roomId) {
+//        if (resultMap.get(roomId) == null) {
+//            return null;
+//        }
+//        return resultMap.get(roomId).getBattleResultStatus();
+//    }
 
     public void setUserId(String roomId, String userId) {
         resultMap.get(roomId).getUserIds().add(userId);
@@ -63,7 +65,7 @@ public class BattleResult {
     @Setter
     public static class ResultInfo {
 
-        private BattleResultStatus battleResultStatus;
+//        private BattleResultStatus battleResultStatus;
 
         private BattleResultRes res;
 

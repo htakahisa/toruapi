@@ -65,6 +65,14 @@ public class RoomEntity {
         }
     }
 
+    public void setChangeCharacterId(String userId, Long changeCharacterId) {
+        if (userId1.equals(userId)) {
+            setChangeCharacterId1(changeCharacterId);
+        } else if (userId2.equals(userId)) {
+            setChangeCharacterId2(changeCharacterId);
+        }
+    }
+
     public void clearWaza() {
         setWazaUser1(null);
         setWazaUser2(null);

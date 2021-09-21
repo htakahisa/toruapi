@@ -23,12 +23,15 @@ public class ToruService {
 
         RoomEntity room = toruLogic.saveRoom(req);
 
-        toruLogic.setBattleResultStatus(room.getRoomId(), BattleResultStatus.CHARACTER_SELECT);
-        toruLogic.setUserId(room.getRoomId(), req.getUserId());
+//        toruLogic.setBattleResultStatus(room.getRoomId(), BattleResultStatus.INIT_CHANGE);
+//        toruLogic.setUserId(room.getRoomId(), req.getUserId());
+
         toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId1());
         toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId2());
         toruLogic.setCharacterStatus(room.getRoomId(), req.getUserId(), req.getCharacterId3());
 
+        toruLogic.setBattleStatusForCreateRoom(BattleResultStatus.INIT_CHANGE, req, room);
+        toruLogic.initBattleStatus(room.getRoomId());
         CreateRoomRes res = new CreateRoomRes();
         res.setRoomId(room.getRoomId());
         res.setReady(room.ready());
@@ -37,10 +40,8 @@ public class ToruService {
 
     @Transactional
     public GetCharacterRes getCharacter(GetCharacterReq req) {
-        CharactersEntity character = toruLogic.getCharacter(req);
+        GetCharacterRes res = toruLogic.getCharacter(req);
 
-        GetCharacterRes res = new GetCharacterRes();
-        res.setCharacter(character);
         return res;
     }
 
@@ -53,8 +54,7 @@ public class ToruService {
         @Transactional
     public GetBattleResultStatusRes getBattleResultStatus(GetBattleResultStatusReq req) {
 
-        GetBattleResultStatusRes res = new GetBattleResultStatusRes();
-        res.setBattleResultStatus(toruLogic.getBattleResultStatus(req.getRoomId()));
+        GetBattleResultStatusRes res = toruLogic.getBattleResultStatus(req.getRoomId());
         return res;
     }
 
@@ -63,38 +63,52 @@ public class ToruService {
 
         toruLogic.setUserId(req.getRoomId(), req.getUserId());
 
-        if (toruLogic.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.BATTLE_FINISED) {
-            return BattleRes.of(BattleResultStatus.BATTLE_FINISED);
-        }
+//        if (toruLogic.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.BATTLE_FINISED) {
+//            return BattleRes.of(BattleResultStatus.BATTLE_FINISED);
+//        }
 
         // roomId とユーザーのチェック
-        if(!toruLogic.setReadyBattle(req)) {
-            return BattleRes.of(toruLogic.getBattleResultStatus(req.getRoomId()));
+//        if(!toruLogic.setReadyBattle(req)) {
+//            return BattleRes.of(toruLogic.getBattleResultStatus(req.getRoomId()));
+//        }
+
+//        toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.BATTLE);
+
+
+        boolean isReady = toruLogic.updateBattleStatus(req);
+        if (!isReady) {
+            return null;
         }
 
-        toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.BATTLE);
         // コマンド実行
-        try {
+//        try {
             BattleRes res = toruLogic.battle(req);
+
+
+        toruLogic.setBattleStatus(BattleResultStatus.GET_RESULT, req.getRoomId());
+
             return res;
-        } catch (Exception e) {
-            toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.COMMAND_WAITING);
-            throw new RuntimeException(e);
-        }
+//        } catch (Exception e) {
+//            toruLogic.setBattleResultStatus(req.getRoomId(), BattleResultStatus.COMMAND_INPUT);
+//            throw new RuntimeException(e);
+//        }
+
+
     }
 
 
     @Transactional
     public BattleResultRes getResult(BattleResultReq req) {
-        if (toruLogic.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.BATTLE_FINISED) {
-            BattleResultRes r  = new BattleResultRes();
-            r.setBattleResultStatus(BattleResultStatus.BATTLE_FINISED);
-            return r;
-        }
+//        if (toruLogic.getBattleResultStatus(req.getRoomId()) == BattleResultStatus.BATTLE_FINISED) {
+//            BattleResultRes r  = new BattleResultRes();
+//            r.setBattleResultStatus(BattleResultStatus.BATTLE_FINISED);
+//            return r;
+//        }
 
         BattleResultRes res = toruLogic.getBattleResult(req.getRoomId(), req.getUserId());
 
         return res;
     }
+
 
 }

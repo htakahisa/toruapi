@@ -16,6 +16,7 @@ public enum Waza {
     KYOUUN,// 強運
     OBENTO, // お弁当 (回復)
     FIRE, // 炎 (特殊)
+    HAKAI,
     ;
 
 }

@@ -15,4 +15,11 @@ public class BattleReq {
     private Waza waza;
 
     private Long changeCharacterId;
+
+    public Long getChangeCharacterId() {
+        if (changeCharacterId == null || changeCharacterId == 0) {
+            return null;
+        }
+        return changeCharacterId;
+    }
 }
