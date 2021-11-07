@@ -133,11 +133,13 @@ public class ToruLogic {
             if (userStatus.getBattleResultStatus() == BattleResultStatus.INIT_CHANGE) {
                 userStatus.setBattleResultStatus(BattleResultStatus.WAIT);
                 userStatus.setBattleResultStatusOld(BattleResultStatus.INIT_CHANGE);
+                userStatus.setSelectedCharacterId(req.getChangeCharacterId());
             }
         } else if (req.getWaza() == Waza.CHANGE) {
             if (userStatus.getBattleResultStatus() == BattleResultStatus.COMMAND_INPUT) {
                 userStatus.setBattleResultStatus(BattleResultStatus.WAIT);
                 userStatus.setBattleResultStatusOld(BattleResultStatus.COMMAND_INPUT);
+                userStatus.setSelectedCharacterId(req.getChangeCharacterId());
             }
         } else if (req.getWaza() == Waza.GIVE_UP) {
             if (userStatus.getBattleResultStatus() == BattleResultStatus.COMMAND_INPUT) {
@@ -200,11 +202,13 @@ public class ToruLogic {
 //        return commandReady;
 //    }
 
-    public GetBattleResultStatusRes getBattleResultStatus(String roomId) {
+    public GetBattleResultStatusRes getBattleResultStatus(String roomId, String userId) {
         GetBattleResultStatusRes battleStatus = battleStatusMap.get(roomId);
 
+
+        RoomEntity room = roomRepository.findById(roomId).get();
+
         if (battleStatus.isAllUserWait()) {
-            RoomEntity room = roomRepository.findById(roomId).get();
             battleStatus.update(BattleResultStatus.COMMAND_INPUT, room.getUserId1());
             battleStatus.update(BattleResultStatus.COMMAND_INPUT, room.getUserId2());
         }
@@ -361,9 +365,11 @@ public class ToruLogic {
                 if (battleInfo.getWaza().getWaza() == Waza.CHANGE) {
                     resultAction.setMessage1("よくやったぞ " + old.getName() + "! 戻っておいで!");
                     resultAction.setAction(ClientAction.CHANGE);
-                    resultAction.setMessage2("いけ! " + meAndOp.getMe(battleInfo.getUserId()).getName() + "!");
+                    resultAction.setMessage2(battleInfo.getUserId() + "は " + meAndOp.getMe(battleInfo.getUserId()).getName() + " を繰り出した。\n\n"
+                            +"いけ! " + meAndOp.getMe(battleInfo.getUserId()).getName() + "!");
                 } else if (battleInfo.getWaza().getWaza() == Waza.INIT_CHANGE) {
-                    resultAction.setMessage1("いけ! " + meAndOp.getMe(battleInfo.getUserId()).getName() + "!");
+                    resultAction.setMessage1(battleInfo.getUserId() + "は " + meAndOp.getMe(battleInfo.getUserId()).getName() + " を繰り出した。\n\n" +
+                            "いけ! " + meAndOp.getMe(battleInfo.getUserId()).getName() + "!");
                     resultAction.setAction(ClientAction.INIT_CHANGE);
                 }
                 //status change
@@ -669,9 +675,12 @@ public class ToruLogic {
 
 
 
-        if (battleStatus.isAllUserWait()) {
 
             RoomEntity room = roomRepository.findById(roomId).get();
+
+            if (battleStatus.getUserStatus(userId).getBattleResultStatus() == BattleResultStatus.GET_RESULT) {
+                this.setBattleStatus(BattleResultStatus.WAIT, roomId, userId);
+            }
 
             // 降参が選ばれた
             if (room.getWazaUser1() == Waza.GIVE_UP) {
@@ -690,15 +699,33 @@ public class ToruLogic {
                 this.setBattleStatus(BattleResultStatus.WIN, roomId, room.getUserId1());
                 this.setBattleStatus(BattleResultStatus.LOSE, roomId, room.getUserId2());
             } else {
-                battleStatus.update(BattleResultStatus.COMMAND_INPUT, roomId);
+                battleStatus.update(BattleResultStatus.WAIT, roomId);
             }
-        } else {
-            if (battleStatus.isCurrentChracterDead(userId)) {
-                battleStatus.update(BattleResultStatus.INIT_CHANGE, userId);
-            } else {
-                battleStatus.update(BattleResultStatus.WAIT, userId);
+
+
+            // user1 dead
+            if (battleStatus.isCurrentChracterDead(room.getUserId1())) {
+                battleStatus.update(BattleResultStatus.INIT_CHANGE, room.getUserId1());
             }
-        }
+
+            // user2 dead
+            if (battleStatus.isCurrentChracterDead(room.getUserId2())) {
+                battleStatus.update(BattleResultStatus.INIT_CHANGE, room.getUserId2());
+            }
+
+
+//            RoomEntity room = roomRepository.findById(roomId).get();
+//
+//            // user1 dead
+//            if (battleStatus.isCurrentChracterDead(room.getUserId1())) {
+//                battleStatus.update(BattleResultStatus.INIT_CHANGE, room.getUserId1());
+//            }
+//
+//            // user2 dead
+//            if (battleStatus.isCurrentChracterDead(room.getUserId2())) {
+//                battleStatus.update(BattleResultStatus.INIT_CHANGE, room.getUserId2());
+//            }
+
 
 
 

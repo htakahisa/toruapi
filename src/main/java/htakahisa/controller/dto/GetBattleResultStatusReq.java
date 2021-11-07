@@ -8,4 +8,5 @@ import lombok.Setter;
 public class GetBattleResultStatusReq {
 
     private String roomId;
+    private String userId;
 }

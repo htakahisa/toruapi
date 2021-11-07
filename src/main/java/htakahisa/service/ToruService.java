@@ -54,7 +54,7 @@ public class ToruService {
         @Transactional
     public GetBattleResultStatusRes getBattleResultStatus(GetBattleResultStatusReq req) {
 
-        GetBattleResultStatusRes res = toruLogic.getBattleResultStatus(req.getRoomId());
+        GetBattleResultStatusRes res = toruLogic.getBattleResultStatus(req.getRoomId(), req.getUserId());
         return res;
     }
 
