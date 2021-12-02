@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class ToruService {
 
@@ -44,6 +46,13 @@ public class ToruService {
 
         return res;
     }
+
+    @Transactional
+    public GetAllCharacterRes getAllCharacter() {
+        return  toruLogic.getAllCharacter();
+    }
+
+
 
     @Transactional
     public void setCharacter(SetCharacterReq req) {

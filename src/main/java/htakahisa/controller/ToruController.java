@@ -40,6 +40,11 @@ public class ToruController {
         return toruService.getCharacter(req);
     }
 
+    @PostMapping(value="/getAllCharacter")
+    public GetAllCharacterRes getAllCharacter() {
+        return toruService.getAllCharacter();
+    }
+
 
     @PostMapping(value="/setCharacter")
     @Deprecated

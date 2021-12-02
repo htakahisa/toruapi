@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +39,11 @@ public class ToruLogic {
     private WazaRepository wazaRepository;
 
     private BattleResult battleResult = new BattleResult();
+
+    @PostConstruct
+    public void init() {
+        roomRepository.deleteAll();
+    }
 
     /**
      * status map
@@ -179,6 +185,20 @@ public class ToruLogic {
         WazaEntity w3 = wazaRepository.findById(c.getWaza3()).get();
         WazaEntity w4 = wazaRepository.findById(c.getWaza4()).get();
         return GetCharacterRes.of(c, w1, w2, w3, w4);
+    }
+
+    public GetAllCharacterRes getAllCharacter() {
+        List<CharactersEntity> list = characterRepository.findAll();
+
+        GetAllCharacterRes res = new GetAllCharacterRes();
+        for (CharactersEntity c : list) {
+
+            GetCharacterReq req = new GetCharacterReq();
+            req.setCharacterId(c.getId());
+            res.addCharacter(this.getCharacter(req));
+        }
+
+        return res;
     }
 
 //    public boolean setReadyBattle(BattleReq req) {
@@ -409,8 +429,8 @@ public class ToruLogic {
                     BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
                     BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                     resultAction.setAction(ClientAction.EFFECT);
-                    resultAction.setMessage1("おもこはちょうど通りかかった飛行機につかまって、ぐぐーんと上がった！");
-                    meAndOp.getMe(battleInfo.getUserId()).addSpeedRate(new BigDecimal("2"));
+                    resultAction.setMessage1("おもこはちょうど通りかかった飛行機につかまって、素早さがぐぐーんと上がった！");
+                    meAndOp.getMe(battleInfo.getUserId()).addSpeedRate(new BigDecimal("1"));
                     result.setInTheBattle(resultAction);
                     battleResultRes.getResults().add(result);
             }
@@ -418,8 +438,8 @@ public class ToruLogic {
                     BattleResultRes.BattleResult result = new BattleResultRes.BattleResult();
                     BattleResultRes.ResultAction resultAction = new BattleResultRes.ResultAction();
                     resultAction.setAction(ClientAction.EFFECT);
-                     resultAction.setMessage1("ヴァリオン");
-                      meAndOp.getMe(battleInfo.getUserId()).addSpeedRate(new BigDecimal("2"));
+                     resultAction.setMessage1("ヴァリオンは、羽をはばたかせ、素早さがグーンと上がった！");
+                      meAndOp.getMe(battleInfo.getUserId()).addSpeedRate(new BigDecimal("0.5"));
                      result.setInTheBattle(resultAction);
                      battleResultRes.getResults().add(result);
             }

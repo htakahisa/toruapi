@@ -17,6 +17,9 @@ public enum Waza {
     OBENTO, // お弁当 (回復)
     FIRE, // 炎 (特殊)
     HAKAI,
+    EREKIRIRIRU,
+    FOLOLOLO,
+    FIRETHEREX,
     ;
 
 }
